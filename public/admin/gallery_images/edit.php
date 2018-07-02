@@ -1,0 +1,170 @@
+<?php require_once('../../../private/initialize.php'); ?>
+<?php require_login(); ?>
+
+<?php
+	
+	
+	if (!isset($_GET['id'])) {
+		redirect_to(url_for('/admin/gallery_images/index.php'));
+	}
+	$id = $_GET['id'];
+	$current_image = find_image_by_id("gallery_images", $id);
+	if (is_post_request()) {
+		$table_name = 'gallery_images';
+		//process form request
+		$image = [];
+		$image['id'] = $id;
+		$image['position'] = $_POST['position'] ?? '';
+		$image['visible'] = $_POST['visible'] ?? '';
+		$image['activity'] = $_POST['activity'] ?? '';
+		$image['place'] = $_POST['place'] ?? '';
+		$image['filename'] = $current_image['filename'] ?? '';
+		$image['size'] = $current_image['size'] ?? '';
+		$image['type'] = $current_image['type'] ?? '';
+		
+		//		on edit we are not moving image file so mo need for target_dir
+
+		
+		$result = update($table_name, $image);
+		if ($result === true) {
+			$_SESSION['info'] = "Image updated successfully";
+			redirect_to(url_for('/admin/gallery_images/edit.php?id=' . h(u($id))));
+		} else {
+			// $errors = $result;
+			// var_dump($errors);
+			// reload the page with errors
+		}
+	} else {
+		//
+		$image = $current_image;
+	}
+	$image_count = count_all_images("gallery_images");
+	// echo $image_count;
+	// $image_set = find_all_images();
+	$image_path = "../../images/homepage_assets/gallery/fullsize";
+?>
+
+<?php $page_title = 'Gallery Images'; ?>
+
+<?php include(SHARED_PATH . '/admin_header.php') ?>
+
+<header id = "main-header" class = "py-4 bg-info text-white">
+	<div class = "container">
+		<div class = "row">
+			<div class = "col-md-8">
+				<h3>
+					<i class = "fa fa-pencil"></i> Edit Gallery Image</h3>
+			</div>
+			<div class = "col-md-4">
+				<?php
+					echo display_info(info());
+				?>
+			</div>
+		</div>
+	</div>
+</header>
+
+<!-- ACTIONS -->
+<section id = "action" class = "py-4 mb-4 bg-light">
+	<div class = "container">
+		<div class = "row">
+			<div class = "col-md-3 mr-auto pt-2">
+				<a href = "<?php echo url_for('/admin/index.php'); ?>" class = "btn btn-light btn-block">
+					<i class = "fa fa-arrow-left"></i> Back To Dashboard
+				</a>
+			</div>
+			<div class = "col-md-3 pt-2">
+				<a href = "<?php echo url_for('/admin/gallery_images/index.php'); ?>" class = "btn btn-success btn-block">
+					<i class = "fa fa-arrow-left"></i> Go Back
+				</a>
+			</div>
+			<div class = "col-md-3 pt-2">
+				<a href = "<?php echo url_for('/index.php?preview=true'); ?>" class = "btn btn-info btn-block"
+				   target = "_blank">
+					<i class = "fa fa-arrow-right"></i> Preview
+				</a>
+			</div>
+			<div class = "col-md-3 pt-2">
+				<a href = "<?php echo url_for('/admin/gallery_images/delete.php?id=' . h(u($id))); ?>"
+				   class = "btn btn-danger btn-block">
+					<i class = "fa fa-remove"></i> Delete Image
+				</a>
+			</div>
+		</div>
+	</div>
+</section>
+
+<!-- Edit image -->
+<section id = "abouts-and-activities">
+	<div class = "container pt-4">
+		<div class = "row">
+			<div class = "col">
+				<form action = "<?php echo url_for('/admin/gallery_images/edit.php?id=' . h(u($id))); ?>" method = "post">
+					<div class = "card">
+						<div class = "card-header">
+							<h4>Edit Image</h4>
+						</div>
+						<div class = "card-body">
+							<div class = "row">
+								<div class = "col-lg-5">
+									<img src = "<?php echo $image_path . "/" . h($image['filename']); ?>"
+									     class = "mx-auto d-block img-fluid" width = "400"
+									     alt = "<?php echo h($image['filename']); ?>">
+								</div>
+								<div class = "col-lg-7 py-3">
+									<!-- display errors -->
+									<div class="errors">
+										<?php errors(); ?>
+										<?php echo display_errors($errors); ?>
+									</div>
+									<div class = "form-group">
+										<select class = "form-control" name = "position" required>
+											<option value = "Position">Position</option>
+											<?php
+												for ($i = 1; $i <= $image_count; $i++) {
+													echo "<option value=\"{$i}\"";
+													if ($image['position'] == $i) {
+														echo " selected";
+													}
+													echo ">{$i}</option>";
+												}
+											?>
+										</select>
+									</div>
+									<div class = "form-group">
+										<input type = "text" name = "activity" class = "form-control" placeholder = "Activity"
+										       value = "<?php echo h($image['activity']); ?>"  required/>
+									</div>
+									
+									<div class = "form-group">
+										<input type = "text" name = "place" class = "form-control" placeholder = "Place"
+										       value = "<?php echo h($image['place']); ?>"  required/>
+									</div>
+									
+									<div class = "row ml-0">
+										<div class = "form-check">
+											<input type = "hidden" name = "visible" value = "0" />
+											<input type = "checkbox" class = "form-check-input" name = "visible"
+											       id = "visibility-check" value = "1" <?php if ($image['visible'] == "1") {
+												echo "checked";
+											}; ?> />
+											<label class = "form-check-label" for = "visibility-check">Published</label>
+										</div>
+									
+									</div>
+									<div class = "row float-right mt-2 mx-2">
+										<button type = "submit" class = "btn btn-info m-2" name = "edit_image">Save</button>
+									</div>
+								</div>
+							
+							
+							</div>
+						</div>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+	</div>
+</section>
+<?php include(SHARED_PATH . '/admin_footer.php') ?>
